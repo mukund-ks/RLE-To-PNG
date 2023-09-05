@@ -2,21 +2,28 @@ import json
 import os
 from glob import glob
 
+import click
 import numpy as np
 from PIL import Image
 
-MASK_DIR = "Data"
 
+def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName: str) -> None:
+    """Function to convert Run-Length-Encoded Binary Mask Array to PNG
 
-def rleToMask(maskRLE, shape, saveDir, imgName):
+    Args:
+        maskRLE (list[int]): RLE Binary Mask Array
+        shape (tuple[int, int]): Shape of Input & Output
+        saveDir (str): Save Directory
+        imgName (str): Image/Mask name
+    """
     H, W = shape
 
-    RLEpairs = np.array(maskRLE).reshape(-1, 2)
+    rlePairs = np.array(maskRLE).reshape(-1, 2)
 
     mask = np.zeros(H * W, dtype=np.uint8)
 
     currIdx = 0
-    for isMask, length in RLEpairs:
+    for isMask, length in rlePairs:
         if isMask == 1:
             mask[currIdx : currIdx + length] = 255
         else:
@@ -24,20 +31,42 @@ def rleToMask(maskRLE, shape, saveDir, imgName):
 
         currIdx += length
 
-    mask_reshaped = mask.reshape(shape).T
+    reshapedMask = mask.reshape(shape).T
 
-    final_mask = (
-        Image.fromarray(mask_reshaped)
+    finalMask = (
+        Image.fromarray(reshapedMask)
         .transpose(Image.FLIP_LEFT_RIGHT)
         .rotate(90, Image.Resampling.BILINEAR, expand=True)
         .resize((W, H))
     )
 
-    final_mask.save(f"{saveDir}/{imgName}_mask.png")
+    finalMask.save(f"{saveDir}/{imgName}_mask.png")
+
+    return
 
 
-def main():
-    masks = sorted(glob(os.path.join(MASK_DIR, "*.json")))
+@click.command()
+@click.option(
+    "-M",
+    "--mask-dir",
+    prompt="Mask Directory",
+    type=str,
+    required=True,
+    help="Directory with Masks as JSON files",
+)
+def main(mask_dir: str) -> None:
+    """Utility script to convert Darwin 2.0 JSON Binary Masks from [V7Labs](https://www.v7labs.com/) to PNG. The masks should be Run-Length-Encoded and the JSON document should be following the Darwin 2.0 JSON Format. [Refer here](https://docs.v7labs.com/reference/darwin-json).
+
+    Args:
+        mask_dir (str): Mask Directory with Darwin 2.0 JSON files.
+
+    Raises:
+        OSError: In the event that provided directory does not exist.
+    """
+    if not os.path.exists(mask_dir):
+        raise OSError(f"Provided Directory ({mask_dir}) does not exist")
+
+    masks = sorted(glob(os.path.join(mask_dir, "*.json")))
 
     saveDir = "Mask"
 
@@ -51,9 +80,12 @@ def main():
         width = data["item"]["slots"][0]["width"]
         height = data["item"]["slots"][0]["height"]
         shape = (height, width)
+
         maskRLE = data["annotations"][0]["raster_layer"]["dense_rle"].copy()
 
         rleToMask(maskRLE=maskRLE, shape=shape, saveDir=saveDir, imgName=imgName)
+
+    return
 
 
 if __name__ == "__main__":
