@@ -24,7 +24,7 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName:
 
     currIdx = 0
     for isMask, length in rlePairs:
-        if isMask == 1:
+        if isMask:
             mask[currIdx : currIdx + length] = 255
         else:
             mask[currIdx : currIdx + length] = 0
@@ -85,6 +85,8 @@ def main(mask_dir: str) -> None:
 
         rleToMask(maskRLE=maskRLE, shape=shape, saveDir=saveDir, imgName=imgName)
 
+    click.secho(message="👍 Done", fg="green")
+    
     return
 
 
