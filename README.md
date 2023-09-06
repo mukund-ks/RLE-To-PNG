@@ -1,6 +1,6 @@
 ## RLE to PNG
 
-A utility script to convert Run-Length-Encoded Binary Masks in Darwin JSON 2.0 format from [V7 Labs](https://www.v7labs.com/) to PNG.
+A utility script to convert Run-Length-Encoded Binary Masks in Darwin JSON 2.0 from [V7 Labs](https://www.v7labs.com/) to PNG.
 
 The script must receive a JSON document that complies with the Darwin JSON 2.0 Format. [Refer here](https://docs.v7labs.com/reference/darwin-json).
 
