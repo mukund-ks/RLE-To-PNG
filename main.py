@@ -16,6 +16,8 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName:
         saveDir (str): Save Directory
         imgName (str): Image/Mask name
     """
+    click.secho(message=f"Converting {imgName} 🚀", fg="blue")
+
     H, W = shape
 
     rlePairs = np.array(maskRLE).reshape(-1, 2)
@@ -24,11 +26,7 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName:
 
     currIdx = 0
     for isMask, length in rlePairs:
-        if isMask:
-            mask[currIdx : currIdx + length] = 255
-        else:
-            mask[currIdx : currIdx + length] = 0
-
+        mask[currIdx : currIdx + length] = 255 if isMask else 0
         currIdx += length
 
     reshapedMask = mask.reshape(shape).T
@@ -86,7 +84,7 @@ def main(mask_dir: str) -> None:
         rleToMask(maskRLE=maskRLE, shape=shape, saveDir=saveDir, imgName=imgName)
 
     click.secho(message="👍 Done", fg="green")
-    
+
     return
 
 
