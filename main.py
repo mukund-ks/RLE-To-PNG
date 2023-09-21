@@ -78,8 +78,10 @@ def main(mask_dir: str) -> None:
         width = data["item"]["slots"][0]["width"]
         height = data["item"]["slots"][0]["height"]
         shape = (height, width)
-
-        maskRLE = data["annotations"][0]["raster_layer"]["dense_rle"].copy()
+        try:
+            maskRLE = data["annotations"][0]["raster_layer"]["dense_rle"].copy()
+        except KeyError as _:
+            maskRLE = data["annotations"][1]["raster_layer"]["dense_rle"].copy()
 
         rleToMask(maskRLE=maskRLE, shape=shape, saveDir=saveDir, imgName=imgName)
 
