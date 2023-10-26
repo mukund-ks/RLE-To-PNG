@@ -55,16 +55,18 @@ Usage: main.py [OPTIONS]
 
   Args:     
     mask_dir (str): Mask Directory with Darwin 2.0 JSON files.
+    save_dir (str): Saving Directory for PNG Masks.
 
   Raises:     
     OSError: In the event that provided directory does not exist.
 
 Options:
   -M, --mask-dir TEXT  Directory with Masks as JSON files  [required]
+  -S, --save-dir TEXT  Directory to save PNG Masks in  [required]
   --help               Show this message and exit.
 ```
 
 * An example
 ```console
-python main.py --mask-dir Data
+python main.py --mask-dir Data --save-dir Mask
 ```
