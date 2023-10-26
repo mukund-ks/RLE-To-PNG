@@ -1,19 +1,20 @@
 import json
 import os
 from glob import glob
+from typing import Any
 
 import click
 import numpy as np
 from PIL import Image
 
 
-def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName: str) -> None:
+def rleToMask(maskRLE: list[int], shape: tuple[int, int], save_dir: str, imgName: str) -> None:
     """Function to convert Run-Length-Encoded Binary Mask Array to PNG
 
     Args:
         maskRLE (list[int]): RLE Binary Mask Array
         shape (tuple[int, int]): Shape of Input & Output
-        saveDir (str): Save Directory
+        save_dir (str): Save Directory
         imgName (str): Image/Mask name
     """
     click.secho(message=f"Converting {imgName} 🚀", fg="blue")
@@ -38,7 +39,7 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName:
         .resize((W, H))
     )
 
-    finalMask.save(f"{saveDir}/{imgName}_mask.png")
+    finalMask.save(f"{save_dir}/{imgName}_mask.png")
 
     return
 
@@ -52,11 +53,20 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], saveDir: str, imgName:
     required=True,
     help="Directory with Masks as JSON files",
 )
-def main(mask_dir: str) -> None:
+@click.option(
+    "-S",
+    "--save-dir",
+    prompt="Save Directory",
+    type=str,
+    required=True,
+    help="Directory to save PNG Masks in",
+)
+def main(mask_dir: str, save_dir: str) -> None:
     """Utility script to convert Darwin 2.0 JSON Binary Masks from [V7Labs](https://www.v7labs.com/) to PNG. The masks should be Run-Length-Encoded and the JSON document should be following the Darwin 2.0 JSON Format. [Refer here](https://docs.v7labs.com/reference/darwin-json).
 
     Args:
         mask_dir (str): Mask Directory with Darwin 2.0 JSON files.
+        save_dir (str): Saving Directory for PNG Masks.
 
     Raises:
         OSError: In the event that provided directory does not exist.
@@ -64,26 +74,31 @@ def main(mask_dir: str) -> None:
     if not os.path.exists(mask_dir):
         raise OSError(f"Provided Directory ({mask_dir}) does not exist")
 
-    masks = sorted(glob(os.path.join(mask_dir, "*.json")))
+    masks: list[str] = sorted(glob(os.path.join(mask_dir, "*.json")))
 
-    saveDir = "Mask"
-
-    os.makedirs(saveDir, exist_ok=True)
+    os.makedirs(save_dir, exist_ok=True)
 
     for mask_path in masks:
         with open(mask_path) as f:
-            data = json.load(f)
-            imgName = os.path.split(mask_path)[1].split(".")[0]
+            data: Any = json.load(f)
+            imgName: str = os.path.split(mask_path)[1].split(".")[0]
 
-        width = data["item"]["slots"][0]["width"]
-        height = data["item"]["slots"][0]["height"]
-        shape = (height, width)
+        width: int = data["item"]["slots"][0]["width"]
+        height: int = data["item"]["slots"][0]["height"]
+        shape: tuple[int, int] = (height, width)
+
+        if not data["annotations"]:
+            click.secho(message=f"Saving {imgName} 🚀", fg="blue")
+            img = Image.new(mode="L", size=(width, height))
+            img.save(f"{save_dir}/{imgName}_mask.png")
+            continue
+
         try:
-            maskRLE = data["annotations"][0]["raster_layer"]["dense_rle"].copy()
+            maskRLE: list[int] = data["annotations"][0]["raster_layer"]["dense_rle"].copy()
         except KeyError as _:
-            maskRLE = data["annotations"][1]["raster_layer"]["dense_rle"].copy()
+            maskRLE: list[int] = data["annotations"][1]["raster_layer"]["dense_rle"].copy()
 
-        rleToMask(maskRLE=maskRLE, shape=shape, saveDir=saveDir, imgName=imgName)
+        rleToMask(maskRLE=maskRLE, shape=shape, save_dir=save_dir, imgName=imgName)
 
     click.secho(message="👍 Done", fg="green")
 
