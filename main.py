@@ -76,6 +76,9 @@ def main(mask_dir: str, save_dir: str) -> None:
 
     masks: list[str] = sorted(glob(os.path.join(mask_dir, "*.json")))
 
+    if not masks:
+        raise OSError(f"No RLE JSON masks in the provided directory, {mask_dir}")
+
     os.makedirs(save_dir, exist_ok=True)
 
     for mask_path in masks:
