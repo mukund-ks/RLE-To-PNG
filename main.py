@@ -39,7 +39,7 @@ def rleToMask(maskRLE: list[int], shape: tuple[int, int], save_dir: str, imgName
         .resize((W, H))
     )
 
-    finalMask.save(f"{save_dir}/{imgName}_mask.png")
+    finalMask.save(f"{save_dir}/{imgName}.png")
 
     return
 
